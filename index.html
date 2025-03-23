@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Transitions - Smooth Scroll</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: black;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            position: relative;
+            height: 500vh; /* Five sections */
+        }
+        
+        .fixed-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .image-stack {
+            position: relative;
+            width: 80vmin;
+            height: 80vmin;
+            max-width: 800px;
+            max-height: 800px;
+        }
+        
+        .image-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1), 
+                        opacity 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+        
+        .image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: transform 1.2s ease-out;
+        }
+        
+        .text-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: auto; /* Changed to auto to allow hover interaction */
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .text-section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .text-section.exiting {
+            opacity: 0;
+            transform: translateY(-40px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        .text-section h1 {
+            font-size: 5rem;
+            font-weight: 200;
+            letter-spacing: 0.5rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            display: inline-block;
+            transition: color 0.3s ease, transform 0.3s ease;
+            cursor: default;
+        }
+        
+        /* Typewriter animation related styles */
+        .typewriter-text {
+            display: inline-block;
+            overflow: hidden;
+            border-right: 2px solid transparent;
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: 0.15em;
+            position: relative;
+        }
+        
+        .typewriter-active .typewriter-text {
+            animation: typing 3.5s steps(40, end),
+                       blink-caret 0.75s step-end infinite;
+            border-right: 2px solid #ff69b4;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #ff69b4 }
+        }
+        
+        @keyframes bounce-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(5px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.char-wrapper {
+    display: inline-block;
+    animation: bounce-in 0.5s ease both;
+}
+
+
+        .text-section p {
+            font-size: 1.2rem;
+            max-width: 500px;
+            line-height: 1.8;
+            text-align: center;
+            padding: 0 20px;
+            font-weight: 300;
+            opacity: 0.8;
+            transition: color 0.3s ease, transform 0.3s ease;
+            cursor: default;
+        }
+        
+        /* Hover effect for text elements */
+        .text-section h1:hover,
+        .text-section p:hover {
+            color: #ff69b4; /* Pink color on hover */
+            text-shadow: 0 0 15px rgba(255, 105, 180, 0.5);
+            animation: bounce 0.5s ease;
+        }
+        
+        /* Bounce animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        /* Love design elements */
+        .love-design {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .love-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0.2;
+            transition: all 1.5s ease, border-color 0.5s ease;
+        }
+        
+        .love-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform-origin: left center;
+            opacity: 0.15;
+            transition: all 1.2s ease, background 0.5s ease;
+        }
+        
+        .love-dot {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.4;
+            box-shadow: 0 0 5px white;
+            transition: all 1s ease, background-color 0.5s ease, box-shadow 0.5s ease;
+        }
+        
+        /* Love colors for design elements */
+        .love-active .love-circle {
+            border-color: rgba(255, 105, 180, 0.2);
+        }
+        
+        .love-active .love-line {
+            background: linear-gradient(to right, transparent, rgba(255, 105, 180, 0.3), transparent);
+        }
+        
+        .love-active .love-dot {
+            background-color: #ff69b4;
+            box-shadow: 0 0 8px #ff69b4;
+        }
+        
+        @keyframes softPulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.05); opacity: 0.3; }
+            100% { transform: scale(1); opacity: 0.2; }
+        }
+        
+        .pulse {
+            animation: softPulse 4s infinite ease-in-out;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(to right, #ff69b4, #ff1493);
+            opacity: 0.7;
+            z-index: 20;
+            transition: width 0.1s ease;
+        }
+        
+        /* Character wrapper for individual letter animations */
+        .char-wrapper {
+            display: inline-block;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .char-wrapper:hover {
+            color: #ff69b4;
+            transform: translateY(-5px) scale(1.1);
+            text-shadow: 0 0 15px rgba(255, 105, 180, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar"></div>
+    
+    <div class="love-design">
+        <!-- Love design elements will be added here dynamically -->
+    </div>
+    
+    <div class="container">
+        <div class="fixed-container">
+            <div class="image-stack">
+                <!-- Images will be added here dynamically -->
+            </div>
+        </div>
+        
+        <div class="text-section" data-index="0">
+            <h1 class="typewriter-text">Eternal</h1>
+            <p>In the quiet spaces between whispers, love reveals its timeless nature. Each moment captured, preserved forever in memory.</p>
+        </div>
+        
+        <div class="text-section" data-index="1">
+            <h1 class="typewriter-text">Memory</h1>
+            <p>Years pass like pages turning, yet some connections remain unchanged—written in the language of shared glances and silent understanding.</p>
+        </div>
+        
+        <div class="text-section" data-index="2">
+            <h1 class="typewriter-text">Devotion</h1>
+            <p>To witness someone through time is to see a thousand versions of the same soul—each one worthy of the same devotion as the first.</p>
+        </div>
+        
+        <div class="text-section" data-index="3">
+            <h1 class="typewriter-text">Infinite</h1>
+            <p>In every face you wear through the years, I find the same eyes that first captivated me—a constant in the relentless flow of change.</p>
+        </div>
+        
+        <div class="text-section" data-index="4">
+            <h1 class="typewriter-text">Timeless</h1>
+            <p>We are not bound by the linear progression of days, but by the circular nature of moments that always lead back to each other.</p>
+        </div>
+    </div>
+
+    <script>
+        // Images array - to be replaced with your actual images
+        const images = [
+            {
+                src: "../main/img/_T.A.N.U_/DSC_9086.jpg",
+                alt: "Love Image 1"
+            },
+            {
+                src: "../main/img/_T.A.N.U_/DSC_9088.jpg",
+                alt: "Love Image 2"
+            },
+            {
+                src: "../main/img/_T.A.N.U_/DSC_9089.jpg",
+                alt: "Love Image 3"
+            },
+            {
+                src: "../main/img/_T.A.N.U_/DSC_9090.jpg",
+                alt: "Love Image 4"
+            },
+            {
+                src: "../main/img/_T.A.N.U_/DSC_9092.jpg",
+                alt: "Love Image 5"
+            }
+        ];
+        
+        // DOM elements
+        const container = document.querySelector('.container');
+        const imageStack = document.querySelector('.image-stack');
+        const textSections = document.querySelectorAll('.text-section');
+        const loveDesign = document.querySelector('.love-design');
+        const progressBar = document.querySelector('.progress-bar');
+        
+        // State variables
+        let lastScrollPosition = 0;
+        let currentIndex = 0;
+        let isScrolling = false;
+        let scrollTimeout;
+        let designElements = [];
+        
+        // Create image elements
+        function createImageElements() {
+            images.forEach((image, index) => {
+                const imageContainer = document.createElement('div');
+                imageContainer.classList.add('image-container');
+                imageContainer.setAttribute('data-index', index);
+                imageContainer.style.opacity = index === 0 ? 1 : 0;
+                
+                const img = document.createElement('img');
+                img.src = image.src;
+                img.alt = image.alt;
+                img.classList.add('image');
+                
+                imageContainer.appendChild(img);
+                imageStack.appendChild(imageContainer);
+            });
+        }
+        
+        // Create love design elements
+        function createLoveDesign() {
+            // Create circles
+            for (let i = 0; i < 5; i++) {
+                const circle = document.createElement('div');
+                circle.classList.add('love-circle');
+                
+                const size = 100 + (i * 100);
+                circle.style.width = `${size}px`;
+                circle.style.height = `${size}px`;
+                circle.style.left = `calc(50% - ${size/2}px)`;
+                circle.style.top = `calc(50% - ${size/2}px)`;
+                
+                if (i === 2) {
+                    circle.classList.add('pulse');
+                }
+                
+                loveDesign.appendChild(circle);
+                designElements.push(circle);
+            }
+            
+            // Create lines
+            for (let i = 0; i < 8; i++) {
+                const line = document.createElement('div');
+                line.classList.add('love-line');
+                
+                const length = 200 + Math.random() * 300;
+                const angle = (i * 45) + (Math.random() * 20 - 10);
+                const offsetX = Math.random() * 100 - 50;
+                const offsetY = Math.random() * 100 - 50;
+                
+                line.style.width = `${length}px`;
+                line.style.left = `calc(50% + ${offsetX}px)`;
+                line.style.top = `calc(50% + ${offsetY}px)`;
+                line.style.transform = `rotate(${angle}deg)`;
+                
+                loveDesign.appendChild(line);
+                designElements.push(line);
+            }
+            
+            // Create dots
+            for (let i = 0; i < 50; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('love-dot');
+                
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = 1 + Math.random() * 3;
+                
+                dot.style.left = `${x}%`;
+                dot.style.top = `${y}%`;
+                dot.style.width = `${size}px`;
+                dot.style.height = `${size}px`;
+                dot.style.opacity = 0.1 + Math.random() * 0.3;
+                
+                loveDesign.appendChild(dot);
+                designElements.push(dot);
+            }
+        }
+        
+        // Typewriter effect initialization
+        function initTypewriterEffect() {
+            const headings = document.querySelectorAll('.typewriter-text');
+            
+            // Wrap each character in a span for individual animations
+            textSections.forEach(section => {
+                const p = section.querySelector('p');
+                if (p) {
+                    const text = p.textContent;
+                    p.innerHTML = '';
+                    
+                    // Wrap each character in a span
+                    for (let i = 0; i < text.length; i++) {
+                        const charSpan = document.createElement('span');
+                        charSpan.classList.add('char-wrapper');
+                        charSpan.textContent = text[i];
+                        p.appendChild(charSpan);
+                    }
+                }
+            });
+        }
+        
+        // Update scroll position and elements
+        function updateScroll() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = container.offsetHeight;
+            const windowHeight = window.innerHeight;
+            const scrollProgress = scrollTop / (docHeight - windowHeight);
+            const totalImages = images.length;
+            
+            // Update progress bar
+            progressBar.style.width = `${scrollProgress * 100}%`;
+            
+            // Calculate which section we're currently viewing (smoother calculation)
+            const sectionHeight = docHeight / totalImages;
+            const roughSectionIndex = scrollTop / sectionHeight;
+            const sectionIndex = Math.min(Math.floor(roughSectionIndex), totalImages - 1);
+            
+            // Calculate progress within current section (0-1)
+            const sectionProgress = (roughSectionIndex - sectionIndex);
+            
+            // Handle text sections first (they lead the transition)
+            textSections.forEach((section, index) => {
+                if (index === sectionIndex) {
+                    // Current section
+                    if (sectionProgress < 0.3) {
+                        section.classList.add('active');
+                        section.classList.remove('exiting');
+                        
+                        // Start typewriter animation
+                        if (!section.querySelector('h1').classList.contains('typewriter-active')) {
+                            section.querySelector('h1').classList.add('typewriter-active');
+                        }
+                    } else {
+                        section.classList.add('exiting');
+                        section.classList.remove('active');
+                    }
+                } else if (index === sectionIndex + 1) {
+                    // Next section
+                    if (sectionProgress > 0.7) {
+                        section.classList.add('active');
+                        section.classList.remove('exiting');
+                        
+                        // Start typewriter animation
+                        if (!section.querySelector('h1').classList.contains('typewriter-active')) {
+                            section.querySelector('h1').classList.add('typewriter-active');
+                        }
+                    } else {
+                        section.classList.remove('active');
+                        section.classList.remove('exiting');
+                        section.querySelector('h1').classList.remove('typewriter-active');
+                    }
+                } else {
+                    // Other sections
+                    section.classList.remove('active');
+                    section.classList.remove('exiting');
+                    section.querySelector('h1').classList.remove('typewriter-active');
+                }
+            });
+            
+            // Update image positions with smooth transitions
+            const imageContainers = document.querySelectorAll('.image-container');
+            imageContainers.forEach((container, index) => {
+                const position = index - sectionIndex;
+                
+                // Handle image transitions (they follow text)
+                if (position === 0) {
+                    // Current image
+                    container.style.transform = `translateY(${-sectionProgress * 100}%) scale(${1 - sectionProgress * 0.1})`;
+                    container.style.opacity = 1 - sectionProgress;
+                } else if (position === 1) {
+                    // Next image
+                    container.style.transform = `translateY(${(1 - sectionProgress) * 5}%) scale(${0.95 + sectionProgress * 0.05})`;
+                    container.style.opacity = sectionProgress;
+                } else if (position < 0) {
+                    // Previous images (out of view)
+                    container.style.transform = `translateY(-100%) scale(0.9)`;
+                    container.style.opacity = 0;
+                } else {
+                    // Future images (waiting in stack)
+                    container.style.transform = `translateY(${5 + (position - 1) * 2}%) scale(${0.95 - (position - 1) * 0.05})`;
+                    container.style.opacity = position === 1 ? 0.3 : 0;
+                }
+                
+                // Add subtle zoom effect to current and next images
+                const img = container.querySelector('.image');
+                if (position === 0) {
+                    img.style.transform = `scale(${1 + sectionProgress * 0.05})`;
+                } else if (position === 1) {
+                    img.style.transform = `scale(${1.05 - sectionProgress * 0.05})`;
+                } else {
+                    img.style.transform = 'scale(1)';
+                }
+            });
+            
+            // Animate design elements based on scroll
+            designElements.forEach((element, index) => {
+                const elementIndex = index % totalImages;
+                const baseOffset = sectionIndex + sectionProgress;
+                
+                if (element.classList.contains('love-circle')) {
+                    // Circles rotate and pulse based on scroll
+                    const rotationAmount = baseOffset * 10;
+                    const scaleAmount = 1 + Math.sin(baseOffset * Math.PI) * 0.05;
+                    element.style.transform = `rotate(${rotationAmount}deg) scale(${scaleAmount})`;
+                } else if (element.classList.contains('love-line')) {
+                    // Lines shift angles based on scroll
+                    const angle = parseInt(element.style.transform.match(/rotate\(([^)]+)\)/)[1]) || 0;
+                    const newAngle = angle + Math.sin(baseOffset * Math.PI) * 2;
+                    element.style.transform = `rotate(${newAngle}deg)`;
+                    element.style.opacity = 0.1 + Math.abs(Math.sin(baseOffset * Math.PI)) * 0.1;
+                } else if (element.classList.contains('love-dot')) {
+                    // Dots twinkle based on scroll
+                    const opacityOffset = Math.sin((baseOffset + index) * Math.PI) * 0.15;
+                    element.style.opacity = parseFloat(element.style.opacity) + opacityOffset;
+                }
+            });
+            
+            // Update current index if changed
+            if (currentIndex !== sectionIndex && !isScrolling) {
+                currentIndex = sectionIndex;
+                animateDesignTransition();
+            }
+            
+            // Track scroll direction for optimizations
+            lastScrollPosition = scrollTop;
+        }
+        
+        // Special animation when transitioning between sections
+        function animateDesignTransition() {
+            isScrolling = true;
+            clearTimeout(scrollTimeout);
+            
+            // Add love color theme to design elements temporarily
+            loveDesign.classList.add('love-active');
+            
+            setTimeout(() => {
+                loveDesign.classList.remove('love-active');
+            }, 1000);
+            
+            // Enhance transition effect on design elements
+            designElements.forEach((element, index) => {
+                if (Math.random() > 0.7) {
+                    const delayMs = Math.random() * 300;
+                    setTimeout(() => {
+                        element.style.opacity = parseFloat(element.style.opacity) * 1.5;
+                        setTimeout(() => {
+                            element.style.opacity = parseFloat(element.style.opacity) / 1.5;
+                        }, 300);
+                    }, delayMs);
+                }
+            });
+            
+            // Reset scrolling state after animation
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+            }, 800);
+        }
+        
+        // Handle text hover effects
+        function initTextHoverEffects() {
+            // Add event listeners for text elements
+            textSections.forEach(section => {
+                const heading = section.querySelector('h1');
+                const paragraph = section.querySelector('p');
+                
+                // Add hover effects for heading and paragraph
+                [heading, paragraph].forEach(element => {
+                    if (element) {
+                        element.addEventListener('mouseenter', () => {
+                            loveDesign.classList.add('love-active');
+                        });
+                        
+                        element.addEventListener('mouseleave', () => {
+                            loveDesign.classList.remove('love-active');
+                        });
+                    }
+                });
+                
+                // Add individual character hover effects
+                const charWrappers = section.querySelectorAll('.char-wrapper');
+                charWrappers.forEach(char => {
+                    char.addEventListener('mouseenter', () => {
+                        char.style.color = '#ff69b4';
+                        char.style.transform = 'translateY(-5px) scale(1.1)';
+                        char.style.textShadow = '0 0 15px rgba(255, 105, 180, 0.7)';
+                    });
+                    
+                    char.addEventListener('mouseleave', () => {
+                        char.style.color = '';
+                        char.style.transform = '';
+                        char.style.textShadow = '';
+                    });
+                });
+            });
+        }
+
+        textSections.forEach(section => {
+    const p = section.querySelector('p');
+    if (p) {
+        const text = p.textContent;
+        p.innerHTML = ''; // Clear existing text
+        
+        for (let i = 0; i < text.length; i++) {
+            const charSpan = document.createElement('span');
+            charSpan.classList.add('char-wrapper');
+            charSpan.textContent = text[i];
+            charSpan.style.animation = `bounce-in 0.5s ease ${i * 50}ms both`; // Add staggered animation
+            p.appendChild(charSpan);
+        }
+    }
+});
+
+        
+        // Initialize
+        function init() {
+            createImageElements();
+            createLoveDesign();
+            initTypewriterEffect();
+            initTextHoverEffects();
+            updateScroll();
+            
+            // Make sure first text section is visible and start its typewriter animation
+            textSections[0].classList.add('active');
+            textSections[0].querySelector('h1').classList.add('typewriter-active');
+            
+            window.addEventListener('scroll', updateScroll);
+            window.addEventListener('resize', updateScroll);
+        }
+        
+        // Start when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
